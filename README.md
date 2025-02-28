@@ -1,11 +1,9 @@
 # Task Management CLI Application
 
 ## 📌 Overview
-
 This is a **Task Management Console Application** built with **Python** and **MySQL**, using the `pymysql` library for database interactions.
 
 ## 🚀 Features
-
 - Add, list, update, mark complete, and delete tasks.
 - Filter tasks by **priority, status, or due date**.
 - Command-line user interface (CLI) with **tabulated output**.
@@ -14,7 +12,6 @@ This is a **Task Management Console Application** built with **Python** and **My
 ---
 
 ## 📂 Project Structure
-
 ```
 project/
 │── models/
@@ -27,6 +24,7 @@ project/
 │   ├── cli.py
 │── main.py
 │── db_config.py
+│── setup_database.py
 │── README.md
 ```
 
@@ -35,16 +33,23 @@ project/
 ## 🛠️ Setup Instructions
 
 ### 1️⃣ Install Dependencies
-
 Make sure you have **Python 3.x** installed, then run:
-
 ```sh
 pip install pymysql tabulate
 ```
 
 ### 2️⃣ Configure MySQL Database
+Before manually configuring MySQL, you can run the provided script to set up the database automatically.
 
-Create a MySQL database and table by running:
+#### 🔹 **Automatic Setup**
+Run the following command to create the database and table automatically:
+Make sure to update the host, password and username before running
+```sh
+python setup_database.py
+```
+
+#### 🔹 **Manual Setup**
+If you prefer to configure MySQL manually, run the following SQL commands:
 ```sql
 CREATE DATABASE tasks_db;
 
@@ -62,7 +67,6 @@ CREATE TABLE tasks (
 ```
 
 ### 3️⃣ Update Database Configuration
-
 Modify `db_config.py` to match your **MySQL credentials**:
 ```python
 import pymysql
@@ -78,7 +82,6 @@ def get_db_connection():
 ```
 
 ### 4️⃣ Run the Application
-
 ```sh
 python main.py
 ```
@@ -100,7 +103,6 @@ python main.py
 ---
 
 ## ✅ Example Usage
-
 ```
 📌 Task Management CLI
 ========================================
@@ -124,15 +126,10 @@ Enter priority (Low, Medium, High): High
 
 ## 🛠️ Troubleshooting
 
-\*\*Error: \*\*\`\`\
+**Error: `ModuleNotFoundError: No module named 'pymysql'`**  
 ➡ Solution: Run `pip install pymysql`
 
-\*\*Error: \*\*\`\`\
+**Error: `Access denied for user 'root'@'localhost'`**  
 ➡ Solution: Check your MySQL username/password in `db_config.py`
 
 ---
-
-## 📜 License
-
-This project is open-source and available under the **MIT License**.
-
