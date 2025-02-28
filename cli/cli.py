@@ -1,5 +1,7 @@
 import sys
 import os
+import re
+from datetime import datetime
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -19,64 +21,78 @@ def print_menu():
     print("7. Exit")
     print("=" * 40)
 
-def format_tasks(tasks):
-    """Formats task data in a tabular format."""
-    if not tasks:
-        print("⚠️ No tasks found.\n")
-        return
+def validate_date(date_str):
+    """Validates the date format (YYYY-MM-DD) and ensures it's not in the past."""
+    try:
+        input_date = datetime.strptime(date_str, "%Y-%m-%d")
+        if input_date < datetime.now():
+            print("❌ Due date cannot be in the past. Please enter a future date.")
+            return False
+        
+        """Validates the date format (YYYY-MM-DD)."""
+        datetime.strptime(date_str, "%Y-%m-%d")
+        return True
+    except ValueError:
+        return False
 
-    table_headers = ["ID", "Title", "Priority", "Status", "Due Date", "Created"]
-    table_data = [
-        [task.task_id, task.title, task.priority, task.status, task.due_date.strftime("%Y-%m-%d"), task.creation_timestamp.strftime("%Y-%m-%d %H:%M:%S")]
-        for task in tasks
-    ]
+def validate_priority(priority):
+    """Validates priority input."""
+    return priority in ["Low", "Medium", "High"]
 
-    print("\n📝 Task List")
-    print(tabulate(table_data, headers=table_headers, tablefmt="fancy_grid"))
+def validate_status(status):
+    """Validates status input."""
+    return status in ["Pending", "In Progress", "Completed"]
+
+def validate_task_id(task_id):
+    """Validates task ID as an integer."""
+    return task_id.isdigit()
 
 def add_task(task_service):
     """Prompts user for task details and adds a new task."""
     title = input("Enter task title: ")
     description = input("Enter task description: ")
-    due_date = input("Enter due date (YYYY-MM-DD): ")
-    priority = input("Enter priority (Low, Medium, High): ")
-
+    
+    while True:
+        due_date = input("Enter due date (YYYY-MM-DD): ")
+        if validate_date(due_date):
+            break
+        print("❌ Invalid date format. Please enter in YYYY-MM-DD format.")
+    
+    while True:
+        priority = input("Enter priority (Low, Medium, High): ")
+        if validate_priority(priority):
+            break
+        print("❌ Invalid priority. Choose from Low, Medium, or High.")
+    
     try:
         task = task_service.create_task(title, description, due_date, priority)
         print(f"\n✅ Task added successfully! Task ID: {task.task_id}\n")
     except Exception as e:
         print(f"\n❌ Error: {e}\n")
 
-def list_tasks(task_service):
-    """Lists all tasks in a table format."""
-    tasks = task_service.list_tasks()
-    format_tasks(tasks)
-
-def filter_tasks(task_service):
-    """Filters tasks based on user input criteria."""
-    filter_by = {}
-    status = input("Filter by status (Pending, In Progress, Completed) or leave blank: ")
-    priority = input("Filter by priority (Low, Medium, High) or leave blank: ")
-    due_date = input("Filter by due date (YYYY-MM-DD) or leave blank: ")
-
-    if status:
-        filter_by["status"] = status
-    if priority:
-        filter_by["priority"] = priority
-    if due_date:
-        filter_by["due_date"] = due_date
-
-    tasks = task_service.list_tasks(filter_by)
-    format_tasks(tasks)
-
 def update_task(task_service):
     """Updates an existing task's details."""
-    task_id = input("Enter task ID to update: ")
+    while True:
+        task_id = input("Enter task ID to update: ")
+        if validate_task_id(task_id):
+            break
+        print("❌ Invalid task ID. Please enter a valid number.")
+    
     title = input("Enter new title: ")
     description = input("Enter new description: ")
-    due_date = input("Enter new due date (YYYY-MM-DD): ")
-    priority = input("Enter new priority (Low, Medium, High): ")
-
+    
+    while True:
+        due_date = input("Enter new due date (YYYY-MM-DD): ")
+        if validate_date(due_date):
+            break
+        print("❌ Invalid date format. Please enter in YYYY-MM-DD format.")
+    
+    while True:
+        priority = input("Enter new priority (Low, Medium, High): ")
+        if validate_priority(priority):
+            break
+        print("❌ Invalid priority. Choose from Low, Medium, or High.")
+    
     try:
         task_service.update_task_details(task_id, title, description, due_date, priority)
         print("\n✅ Task updated successfully!\n")
@@ -85,8 +101,12 @@ def update_task(task_service):
 
 def mark_task_completed(task_service):
     """Marks a task as completed."""
-    task_id = input("Enter task ID to mark as completed: ")
-
+    while True:
+        task_id = input("Enter task ID to mark as completed: ")
+        if validate_task_id(task_id):
+            break
+        print("❌ Invalid task ID. Please enter a valid number.")
+    
     try:
         task_service.mark_task_completed(task_id)
         print("\n✅ Task marked as completed!\n")
@@ -95,13 +115,50 @@ def mark_task_completed(task_service):
 
 def delete_task(task_service):
     """Deletes a task."""
-    task_id = input("Enter task ID to delete: ")
-
+    while True:
+        task_id = input("Enter task ID to delete: ")
+        if validate_task_id(task_id):
+            break
+        print("❌ Invalid task ID. Please enter a valid number.")
+    
     try:
         task_service.delete_task(task_id)
         print("\n🗑️ Task deleted successfully!\n")
     except Exception as e:
         print(f"\n❌ Error: {e}\n")
+
+def list_tasks(task_service):
+    """Lists all tasks in a tabular format."""
+    tasks = task_service.list_tasks()
+    if not tasks:
+        print("⚠️ No tasks found")
+        return
+    
+    table_headers = ["ID", "Title", "Description", "Priority", "Status", "Due Date", "Created"]
+    table_data = [
+        [task.task_id, task.title, task.description, task.priority, task.status, task.due_date.strftime("%Y-%m-%d"), task.creation_timestamp.strftime("%Y-%m-%d %H:%M:%S")]
+        for task in tasks
+    ]
+    
+    print("📝 Task List")
+    print(tabulate(table_data, headers=table_headers, tablefmt="fancy_grid"))
+
+def filter_tasks(task_service):
+    """Filters tasks based on user input criteria."""
+    filter_by = {}
+    status = input("Filter by status (Pending, In Progress, Completed) or leave blank: ")
+    priority = input("Filter by priority (Low, Medium, High) or leave blank: ")
+    due_date = input("Filter by due date (YYYY-MM-DD) or leave blank: ")
+    
+    if status and validate_status(status):
+        filter_by["status"] = status
+    if priority and validate_priority(priority):
+        filter_by["priority"] = priority
+    if due_date and validate_date(due_date):
+        filter_by["due_date"] = due_date
+    
+    tasks = task_service.list_tasks(filter_by)
+    list_tasks(task_service)
 
 def main_menu(task_service: TaskService):
     """Main CLI loop."""
